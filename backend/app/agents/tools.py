@@ -1,5 +1,10 @@
 ﻿import re
 
+STOP_WORDS = {
+    "he", "she", "they", "it", "we", "i", "the", "a", "an", "new", "pricing", "sample",
+    "study", "material", "brochure", "positive", "neutral", "concerned", "worried", "interested"
+}
+
 
 # These functions are intentionally small placeholders for the five planned CRM tools.
 # In production, each function can call Groq/LangGraph while keeping the same contract.
@@ -38,20 +43,39 @@ def extract_competitive_intelligence(transcript: str) -> str | None:
 
 
 def _find_hcp_name(transcript: str) -> str:
-    match = re.search(r"Dr\.?\s+[A-Z][a-zA-Z]+", transcript)
-    return match.group(0) if match else "Unknown HCP"
+    patterns = [
+        r"\bDr\.?\s+[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?",
+        r"(?i:\b(?:met|visited|called|spoke with|meeting with))\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)",
+        r"(?i:\bHCP\s*(?:name)?\s*[:\-]\s*)([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, transcript)
+        if match:
+            name = match.group(1) if match.lastindex else match.group(0)
+            return _format_hcp_name(name)
+    return "Unknown HCP"
 
 
 def _find_product(transcript: str) -> str:
-    match = re.search(r"(?:product|drug|medicine|therapy|trial)\s+([A-Z]?[a-zA-Z0-9-]+)", transcript, re.IGNORECASE)
-    return match.group(1) if match else "General discussion"
+    patterns = [
+        r"\b(?:product|drug|medicine|therapy)\s*(?:discussed)?\s*[:\-]?\s*([A-Z][a-zA-Z0-9-]+)",
+        r"\bdiscussed\s+([A-Z][a-zA-Z0-9-]+)",
+        r"\babout\s+([A-Z][a-zA-Z0-9-]+)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, transcript, re.IGNORECASE)
+        if match:
+            product = match.group(1).strip(" .,:;\"'")
+            if product.lower() not in STOP_WORDS:
+                return product
+    return "General discussion"
 
 
 def _find_sentiment(transcript: str) -> str:
     text = transcript.lower()
     if any(word in text for word in ["interested", "positive", "agreed", "liked"]):
         return "positive"
-    if any(word in text for word in ["worried", "concern", "pricing", "risk"]):
+    if any(word in text for word in ["worried", "concern", "concerned", "pricing", "risk"]):
         return "concerned"
     return "neutral"
 
@@ -63,3 +87,11 @@ def _find_action_items(transcript: str) -> list[str]:
     if "follow" in transcript.lower():
         actions.append("Schedule follow-up")
     return actions or ["Review and confirm interaction log"]
+
+
+def _format_hcp_name(name: str) -> str:
+    cleaned = name.strip(" .,:;\"'")
+    if cleaned.lower().startswith("dr"):
+        cleaned = re.sub(r"^Dr\.?\s*", "Dr. ", cleaned, flags=re.IGNORECASE)
+        return cleaned
+    return f"Dr. {cleaned}"

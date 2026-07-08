@@ -6,22 +6,39 @@ import { setDraft, setError, setLoading, updateField } from "../store/interactio
 const aiSuggestions = [
   "Schedule follow-up meeting in 2 weeks",
   "Send OncoBoost Phase III PDF",
-  "Add Dr. Sharma to advisory board invite list"
+  "Add HCP to advisory board invite list"
 ];
+
+const assistantTools = [
+  "log_interaction",
+  "edit_interaction",
+  "verify_compliance_guidelines",
+  "log_resource_request",
+  "extract_competitive_intelligence"
+];
+
+const requiredInputFields = ["transcript", "hcpName", "product", "topics", "outcomes", "followUps"];
 
 export function InteractionForm() {
   const dispatch = useDispatch();
   const { form, loading, error, draft } = useSelector((state) => state.interaction);
 
   const fieldValue = (field, fallback = "") => form[field] ?? fallback;
+  const hasEnoughInput = requiredInputFields.some((field) => fieldValue(field).trim().length >= 3);
 
   async function handleAnalyze(event) {
     event.preventDefault();
-    dispatch(setLoading(true));
     dispatch(setError(""));
 
+    if (!hasEnoughInput) {
+      dispatch(setError("Enter a short chat note or fill at least one interaction field."));
+      return;
+    }
+
+    dispatch(setLoading(true));
+
     try {
-      const result = await analyzeInteraction(form.transcript);
+      const result = await analyzeInteraction(form);
       dispatch(setDraft(result));
     } catch (err) {
       dispatch(setError(err.message));
@@ -32,6 +49,12 @@ export function InteractionForm() {
 
   function update(field) {
     return (event) => dispatch(updateField({ field, value: event.target.value }));
+  }
+
+  function applySuggestion(item) {
+    const current = fieldValue("followUps");
+    const nextValue = current ? `${current}\n${item}` : item;
+    dispatch(updateField({ field: "followUps", value: nextValue }));
   }
 
   return (
@@ -46,6 +69,11 @@ export function InteractionForm() {
             <label>
               HCP Name
               <input value={fieldValue("hcpName")} onChange={update("hcpName")} placeholder="Search or select HCP..." />
+            </label>
+
+            <label>
+              Product Discussed
+              <input value={fieldValue("product")} onChange={update("product")} placeholder="Enter product name..." />
             </label>
 
             <label>
@@ -117,8 +145,8 @@ export function InteractionForm() {
               Neutral
             </label>
             <label>
-              <input type="radio" name="sentiment" value="negative" checked={fieldValue("sentiment", "neutral") === "negative"} onChange={update("sentiment")} />
-              Negative
+              <input type="radio" name="sentiment" value="concerned" checked={fieldValue("sentiment", "neutral") === "concerned"} onChange={update("sentiment")} />
+              Concerned
             </label>
           </fieldset>
 
@@ -135,7 +163,7 @@ export function InteractionForm() {
           <div className="suggestions">
             <strong>AI Suggested Follow-ups:</strong>
             {aiSuggestions.map((item) => (
-              <button type="button" key={item}>+ {item}</button>
+              <button type="button" key={item} onClick={() => applySuggestion(item)}>+ {item}</button>
             ))}
           </div>
         </div>
@@ -146,19 +174,27 @@ export function InteractionForm() {
           <span className="assistant-icon">AI</span>
           <div>
             <h2>AI Assistant</h2>
-            <p>Log interaction via chat</p>
+            <p>Type details here to auto-fill the form</p>
           </div>
         </div>
 
         <div className="assistant-body">
           <div className="prompt-card">
-            Log interaction details here (e.g., "Met Dr. Smith, discussed Product X efficacy, positive sentiment, shared brochure") or ask for help.
+            Example: Met Dr. Sharma, discussed CardioMax pricing, positive sentiment, requested study material, follow up next week.
+          </div>
+
+          <div className="tool-list" aria-label="Assistant capabilities">
+            <strong>Assistant works</strong>
+            {assistantTools.map((tool) => (
+              <span key={tool}>{tool}</span>
+            ))}
           </div>
 
           {draft && (
             <div className="draft-card">
-              <strong>Draft captured</strong>
-              <span>{draft.hcp_name || "HCP"} - {draft.sentiment || "neutral"}</span>
+              <strong>Draft captured and form filled</strong>
+              <span>{draft.hcp_name || "HCP"} - {draft.product || "Product"} - {draft.sentiment || "neutral"}</span>
+              <p>{draft.draft_summary}</p>
               <p>{draft.competitive_intelligence || "No competitor mention found."}</p>
             </div>
           )}
@@ -170,10 +206,10 @@ export function InteractionForm() {
           <input
             value={form.transcript}
             onChange={update("transcript")}
-            placeholder="Describe interaction..."
+            placeholder="Write interaction details..."
             aria-label="Describe interaction"
           />
-          <button className="log-button" type="submit" disabled={loading || !form.transcript.trim()}>
+          <button className="log-button" type="submit" disabled={loading || !hasEnoughInput}>
             {loading ? "..." : "Log"}
           </button>
         </div>
