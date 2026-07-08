@@ -54,3 +54,8 @@ class InteractionDraft(BaseModel):
     resource_request: str | None = None
     competitive_intelligence: str | None = None
     draft_summary: str
+
+
+class InteractionUpdateRequest(BaseModel):
+    existing: InteractionDraft
+    updates: InteractionAnalyzeRequest

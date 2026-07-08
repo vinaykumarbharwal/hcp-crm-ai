@@ -405,23 +405,35 @@ textarea:focus {
 
 .assistant-input-row {
   display: grid;
-  grid-template-columns: 1fr 80px;
+  grid-template-columns: minmax(0, 1fr) 80px;
   gap: 10px;
   padding: 12px 20px;
+}
+
+.assistant-input-row:has(.update-button) {
+  grid-template-columns: minmax(0, 1fr) 80px 80px;
 }
 
 .assistant-input-row input {
   height: 30px;
 }
 
-.log-button {
+.log-button,
+.update-button {
   height: 30px;
   border: 0;
   border-radius: 4px;
-  background: #83878f;
   color: #ffffff;
   font-size: 12px;
   font-weight: 900;
+}
+
+.log-button {
+  background: #83878f;
+}
+
+.update-button {
+  background: #1f6f62;
 }
 
 .log-button::before {
@@ -471,7 +483,8 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
-  .log-button {
+  .log-button,
+  .update-button {
     width: 100%;
   }
 }

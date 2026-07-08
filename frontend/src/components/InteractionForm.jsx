@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { analyzeInteraction } from "../services/api.js";
+import { analyzeInteraction, updateInteractionDraft } from "../services/api.js";
 import { setDraft, setError, setLoading, updateField } from "../store/interactionSlice.js";
 
 const aiSuggestions = [
@@ -39,6 +39,26 @@ export function InteractionForm() {
 
     try {
       const result = await analyzeInteraction(form);
+      dispatch(setDraft(result));
+    } catch (err) {
+      dispatch(setError(err.message));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }
+
+  async function handleUpdate() {
+    dispatch(setError(""));
+
+    if (!draft) {
+      dispatch(setError("Create a draft before updating it."));
+      return;
+    }
+
+    dispatch(setLoading(true));
+
+    try {
+      const result = await updateInteractionDraft(draft, form);
       dispatch(setDraft(result));
     } catch (err) {
       dispatch(setError(err.message));
@@ -212,6 +232,11 @@ export function InteractionForm() {
           <button className="log-button" type="submit" disabled={loading || !hasEnoughInput}>
             {loading ? "..." : "Log"}
           </button>
+          {draft && (
+            <button className="update-button" type="button" disabled={loading} onClick={handleUpdate}>
+              Update
+            </button>
+          )}
         </div>
       </aside>
     </form>
