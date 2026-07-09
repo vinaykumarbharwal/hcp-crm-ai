@@ -19,6 +19,7 @@ def log_interaction(transcript: str, llm_client: InteractionExtractor | None = N
         "hcp_name": _find_hcp_name(transcript),
         "product": _find_product(transcript),
         "sentiment": _find_sentiment(transcript),
+        "interaction_type": _find_interaction_type(transcript),
         "action_items": _find_action_items(transcript),
         "draft_summary": None,
     }
@@ -31,6 +32,7 @@ def log_interaction(transcript: str, llm_client: InteractionExtractor | None = N
         "hcp_name": extracted.get("hcp_name") or defaults["hcp_name"],
         "product": extracted.get("product") or defaults["product"],
         "sentiment": extracted.get("sentiment") or defaults["sentiment"],
+        "interaction_type": extracted.get("interaction_type") or defaults["interaction_type"],
         "action_items": extracted.get("action_items") or defaults["action_items"],
         "draft_summary": extracted.get("draft_summary") or defaults["draft_summary"],
     }
@@ -59,6 +61,17 @@ def log_resource_request(transcript: str) -> str | None:
 def extract_competitive_intelligence(transcript: str) -> str | None:
     match = re.search(r"competitor|competing|alternative|versus|vs\.?\s+([\w-]+)", transcript, re.IGNORECASE)
     return "competitor_or_alternative_mentioned" if match else None
+
+
+def _find_interaction_type(transcript: str) -> str:
+    text = transcript.lower()
+    if "conference" in text or "congress" in text or "symposium" in text:
+        return "Conference"
+    if "email" in text or "mailed" in text:
+        return "Email"
+    if "call" in text or "phone" in text or "telephonic" in text:
+        return "Call"
+    return "Meeting"
 
 
 def _find_hcp_name(transcript: str) -> str:

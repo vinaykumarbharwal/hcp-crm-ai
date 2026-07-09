@@ -15,6 +15,7 @@ class Interaction(Base):
     hcp_name: Mapped[str] = mapped_column(String(120), index=True)
     product: Mapped[str] = mapped_column(String(120), index=True)
     sentiment: Mapped[str] = mapped_column(String(40), default="neutral")
+    interaction_type: Mapped[str] = mapped_column(String(40), default="Meeting")
     transcript: Mapped[str] = mapped_column(Text)
     action_items: Mapped[str] = mapped_column(Text, default="[]")
     compliance_status: Mapped[str] = mapped_column(String(40), default="clear")

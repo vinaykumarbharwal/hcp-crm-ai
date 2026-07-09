@@ -33,6 +33,7 @@ class HcpGroqLLM:
             "hcp_name": _clean_string(payload.get("hcp_name")) or defaults["hcp_name"],
             "product": _clean_string(payload.get("product")) or defaults["product"],
             "sentiment": _normalize_sentiment(payload.get("sentiment")) or defaults["sentiment"],
+            "interaction_type": _normalize_interaction_type(payload.get("interaction_type")) or defaults["interaction_type"],
             "action_items": _clean_action_items(payload.get("action_items")) or defaults["action_items"],
             "draft_summary": _clean_string(payload.get("draft_summary")) or None,
         }
@@ -48,8 +49,9 @@ def _build_extraction_prompt(transcript: str, defaults: dict[str, Any]) -> str:
     return f"""
 You are the AI agent inside an HCP CRM used by pharmaceutical field representatives.
 Extract a concise interaction draft from the note below.
-Return only valid JSON with these keys: hcp_name, product, sentiment, action_items, draft_summary.
+Return only valid JSON with these keys: hcp_name, product, sentiment, interaction_type, action_items, draft_summary.
 Sentiment must be one of: positive, neutral, concerned.
+Interaction type must be one of: Meeting, Call, Email, Conference.
 Action items must be an array of short sales follow-up tasks.
 Use the fallback JSON if the note does not include a value.
 
@@ -79,6 +81,17 @@ def _clean_string(value: Any) -> str:
 def _normalize_sentiment(value: Any) -> str:
     sentiment = _clean_string(value).lower()
     return sentiment if sentiment in {"positive", "neutral", "concerned"} else ""
+
+
+def _normalize_interaction_type(value: Any) -> str:
+    normalized = _clean_string(value).lower()
+    option_map = {
+        "meeting": "Meeting",
+        "call": "Call",
+        "email": "Email",
+        "conference": "Conference",
+    }
+    return option_map.get(normalized, "")
 
 
 def _clean_action_items(value: Any) -> list[str]:

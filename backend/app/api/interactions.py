@@ -25,6 +25,7 @@ def _form_updates_to_draft_fields(payload: InteractionAnalyzeRequest) -> dict:
     updates = {
         "hcp_name": payload.hcp_name,
         "product": payload.product,
+        "interaction_type": payload.interaction_type,
     }
     if payload.has_explicit_sentiment():
         updates["sentiment"] = payload.sentiment
@@ -48,6 +49,8 @@ def analyze_interaction(payload: InteractionAnalyzeRequest, db: Session = Depend
         draft.hcp_name = payload.hcp_name
     if payload.product:
         draft.product = payload.product
+    if payload.interaction_type:
+        draft.interaction_type = payload.interaction_type
     if payload.has_explicit_sentiment():
         draft.sentiment = payload.sentiment
     if payload.follow_ups:

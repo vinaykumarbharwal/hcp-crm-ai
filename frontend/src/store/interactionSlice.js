@@ -46,6 +46,9 @@ const interactionSlice = createSlice({
       if (draft.sentiment) {
         state.form.sentiment = draft.sentiment;
       }
+      if (draft.interaction_type || draft.interactionType) {
+        state.form.interactionType = draft.interaction_type || draft.interactionType;
+      }
       if (draft.action_items?.length) {
         state.form.followUps = draft.action_items.join("\n");
       }

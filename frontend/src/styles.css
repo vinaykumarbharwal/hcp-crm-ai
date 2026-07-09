@@ -386,11 +386,11 @@ textarea:focus {
 }
 
 .chat-bubble {
-  padding: 18px 18px;
+  padding: 14px 16px;
   color: #263241;
-  font-size: 15px;
-  font-weight: 650;
-  line-height: 1.45;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .hint-bubble {
@@ -593,5 +593,7 @@ textarea:focus {
     padding-right: 16px;
   }
 }
+
+
 
 

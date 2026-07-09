@@ -77,6 +77,7 @@ def _build_draft_node(state: HcpAgentState) -> HcpAgentState:
             hcp_name=interaction["hcp_name"],
             product=interaction["product"],
             sentiment=interaction["sentiment"],
+            interaction_type=interaction.get("interaction_type", "Meeting"),
             action_items=interaction["action_items"],
             compliance_status=state["compliance_status"],
             resource_request=state.get("resource_request"),

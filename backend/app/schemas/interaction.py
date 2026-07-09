@@ -50,10 +50,13 @@ class InteractionAnalyzeRequest(BaseModel):
 
 
 class InteractionDraft(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     id: int | None = None
     hcp_name: str
     product: str
     sentiment: str
+    interaction_type: str = Field(default="Meeting", alias="interactionType")
     action_items: list[str]
     compliance_status: str
     resource_request: str | None = None

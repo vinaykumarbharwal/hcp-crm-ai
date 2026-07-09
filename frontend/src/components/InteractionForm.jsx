@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { analyzeInteraction, updateInteractionDraft } from "../services/api.js";
 import { setDraft, setError, setLoading, updateField } from "../store/interactionSlice.js";
@@ -12,12 +12,43 @@ const aiSuggestions = [
 
 const requiredInputFields = ["transcript", "hcpName", "product", "topics", "outcomes", "followUps"];
 
+const assistantHint = 'Log interaction details here (e.g., "Met Dr. Smith, discussed Prodo-X efficacy, positive sentiment, shared brochure") or ask for help.';
+
+function buildSuccessMessage(draft) {
+  const hcpText = draft.hcp_name && draft.hcp_name !== "Unknown HCP" ? ` for ${draft.hcp_name}` : "";
+  const productText = draft.product && draft.product !== "General discussion" ? ` ${draft.product}` : "";
+  const sentimentText = draft.sentiment ? ` Sentiment is marked as ${draft.sentiment}.` : "";
+  const materialText = draft.resource_request
+    ? " Materials/resource follow-up has been flagged from your summary."
+    : " Materials will be populated if the note mentions brochures, studies, or samples.";
+  const followUpText = draft.action_items?.[0] || "scheduling a meeting";
+
+  return `Interaction logged successfully${hcpText}! I populated the HCP Name, Date, Sentiment, and Materials from your${productText} summary.${sentimentText}${materialText} Would you like me to suggest a specific follow-up action, such as ${followUpText}?`;
+}
+
 export function InteractionForm() {
   const dispatch = useDispatch();
   const { form, loading, error, draft } = useSelector((state) => state.interaction);
+  const [lastSubmittedMessage, setLastSubmittedMessage] = useState("");
+  const [assistantSuccessMessage, setAssistantSuccessMessage] = useState("");
 
   const fieldValue = (field, fallback = "") => form[field] ?? fallback;
   const hasEnoughInput = requiredInputFields.some((field) => fieldValue(field).trim().length >= 3);
+
+  function submittedMessageText() {
+    const transcript = fieldValue("transcript").trim();
+    if (transcript) {
+      return transcript;
+    }
+
+    return [
+      fieldValue("hcpName").trim() && `HCP: ${fieldValue("hcpName").trim()}`,
+      fieldValue("product").trim() && `Product: ${fieldValue("product").trim()}`,
+      fieldValue("topics").trim() && `Topics: ${fieldValue("topics").trim()}`,
+      fieldValue("outcomes").trim() && `Outcomes: ${fieldValue("outcomes").trim()}`,
+      fieldValue("followUps").trim() && `Follow-ups: ${fieldValue("followUps").trim()}`
+    ].filter(Boolean).join(". ");
+  }
 
   async function handleAnalyze(event) {
     event.preventDefault();
@@ -28,11 +59,15 @@ export function InteractionForm() {
       return;
     }
 
+    const submittedMessage = submittedMessageText();
     dispatch(setLoading(true));
 
     try {
       const result = await analyzeInteraction(form);
       dispatch(setDraft(result));
+      setLastSubmittedMessage(submittedMessage);
+      setAssistantSuccessMessage(buildSuccessMessage(result));
+      dispatch(updateField({ field: "transcript", value: "" }));
     } catch (err) {
       dispatch(setError(err.message));
     } finally {
@@ -194,13 +229,20 @@ export function InteractionForm() {
 
         <div className="assistant-body">
           <div className="chat-bubble hint-bubble">
-            Log interaction details here (e.g., "Met Dr. Smith, discussed Prodo-X efficacy, positive sentiment, shared brochure") or ask for help.
+            {assistantHint}
           </div>
 
-          <div className="chat-bubble user-bubble">
-            {fieldValue("transcript") ||
-              "Today I met with Dr. Smith and discussed product X efficiency. The sentiment was positive, and I shared the brochures."}
-          </div>
+          {lastSubmittedMessage && (
+            <div className="chat-bubble user-bubble">
+              {lastSubmittedMessage}
+            </div>
+          )}
+
+          {assistantSuccessMessage && (
+            <div className="chat-bubble success-bubble">
+              {assistantSuccessMessage}
+            </div>
+          )}
 
           <InteractionSummary draft={draft} />
         </div>
