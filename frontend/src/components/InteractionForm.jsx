@@ -2,6 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { analyzeInteraction, updateInteractionDraft } from "../services/api.js";
 import { setDraft, setError, setLoading, updateField } from "../store/interactionSlice.js";
+import { InteractionSummary } from "./InteractionSummary.jsx";
 
 const aiSuggestions = [
   "Schedule follow-up meeting in 2 weeks",
@@ -210,14 +211,7 @@ export function InteractionForm() {
             ))}
           </div>
 
-          {draft && (
-            <div className="draft-card">
-              <strong>Draft captured and form filled</strong>
-              <span>{draft.hcp_name || "HCP"} - {draft.product || "Product"} - {draft.sentiment || "neutral"}</span>
-              <p>{draft.draft_summary}</p>
-              <p>{draft.competitive_intelligence || "No competitor mention found."}</p>
-            </div>
-          )}
+          <InteractionSummary draft={draft} />
         </div>
 
         {error && <p className="error">{error}</p>}

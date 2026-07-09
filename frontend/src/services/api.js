@@ -15,12 +15,24 @@ async function parseResponse(response, fallbackMessage) {
   return response.json();
 }
 
+function buildAnalyzePayload(form) {
+  const payload = { ...form };
+
+  // The radio group defaults to neutral for the empty form. Do not send that
+  // default during analysis, or it overwrites sentiment extracted from notes.
+  if (payload.sentiment === "neutral") {
+    delete payload.sentiment;
+  }
+
+  return payload;
+}
+
 export async function analyzeInteraction(form) {
   // Send the full form so chat notes and structured fields both work.
   const response = await fetch(`${API_URL}/api/interactions/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(form)
+    body: JSON.stringify(buildAnalyzePayload(form))
   });
 
   return parseResponse(response, "Unable to analyze interaction right now.");

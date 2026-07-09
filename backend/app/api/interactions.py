@@ -17,14 +17,19 @@ def _refresh_summary(draft: InteractionDraft) -> None:
     )
 
 
+def _split_action_items(value: str) -> list[str]:
+    return [item.strip() for item in value.splitlines() if item.strip()]
+
+
 def _form_updates_to_draft_fields(payload: InteractionAnalyzeRequest) -> dict:
     updates = {
         "hcp_name": payload.hcp_name,
         "product": payload.product,
-        "sentiment": payload.sentiment,
     }
+    if payload.has_explicit_sentiment():
+        updates["sentiment"] = payload.sentiment
     if payload.follow_ups:
-        updates["action_items"] = [item.strip() for item in payload.follow_ups.splitlines() if item.strip()]
+        updates["action_items"] = _split_action_items(payload.follow_ups)
     if payload.outcomes:
         updates["draft_summary"] = payload.outcomes
     return updates
@@ -43,10 +48,12 @@ def analyze_interaction(payload: InteractionAnalyzeRequest, db: Session = Depend
         draft.hcp_name = payload.hcp_name
     if payload.product:
         draft.product = payload.product
-    if payload.sentiment:
+    if payload.has_explicit_sentiment():
         draft.sentiment = payload.sentiment
-    if payload.follow_ups and payload.follow_ups not in draft.action_items:
-        draft.action_items.append(payload.follow_ups)
+    if payload.follow_ups:
+        for item in _split_action_items(payload.follow_ups):
+            if item not in draft.action_items:
+                draft.action_items.append(item)
 
     _refresh_summary(draft)
     return save_interaction_draft(db, draft, transcript)

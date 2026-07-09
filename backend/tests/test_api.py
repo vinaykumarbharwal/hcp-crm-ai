@@ -96,3 +96,17 @@ def test_edit_interaction_updates_existing_draft_without_erasing_blank_fields():
     assert body["action_items"] == ["Send updated brochure", "Schedule follow-up"]
     assert body["draft_summary"] == "Dr. Sharma discussed CardioMax with positive sentiment. Compliance status: clear."
     assert isinstance(body["id"], int)
+
+def test_analyze_interaction_preserves_extracted_sentiment_without_form_override():
+    response = client.post(
+        "/api/interactions/analyze",
+        json={"transcript": "Met Dr. Sharma, discussed CardioMax, positive sentiment, follow up next week."},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["hcp_name"] == "Dr. Sharma"
+    assert body["product"] == "CardioMax"
+    assert body["sentiment"] == "positive"
+    assert "Schedule follow-up" in body["action_items"]
+    assert body["draft_summary"] == "Dr. Sharma discussed CardioMax with positive sentiment. Compliance status: clear."

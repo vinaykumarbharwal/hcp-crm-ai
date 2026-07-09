@@ -29,6 +29,10 @@ class InteractionAnalyzeRequest(BaseModel):
         ]
         return any(field.strip() for field in fields)
 
+    def has_explicit_sentiment(self) -> bool:
+        """Return true when sentiment came from the request, not the model default."""
+        return "sentiment" in self.model_fields_set
+
     def combined_transcript(self) -> str:
         """Build one readable note from chat text and structured form fields."""
         parts = [
@@ -38,7 +42,7 @@ class InteractionAnalyzeRequest(BaseModel):
             f"Product discussed: {self.product}" if self.product else "",
             f"Attendees: {self.attendees}" if self.attendees else "",
             f"Topics discussed: {self.topics}" if self.topics else "",
-            f"Observed sentiment: {self.sentiment}" if self.has_interaction_content() and self.sentiment else "",
+            f"Observed sentiment: {self.sentiment}" if self.has_interaction_content() and self.has_explicit_sentiment() else "",
             f"Outcomes: {self.outcomes}" if self.outcomes else "",
             f"Follow-up actions: {self.follow_ups}" if self.follow_ups else "",
         ]
