@@ -3,10 +3,9 @@ import React from "react";
 export function InteractionSummary({ draft }) {
   if (!draft) {
     return (
-      <aside className="panel muted-panel">
-        <h2>Draft Summary</h2>
-        <p>Agent output appears here after the field note is analyzed.</p>
-      </aside>
+      <div className="chat-bubble success-bubble">
+        <strong>Interaction logged successfully!</strong> The details (HCP Name, Date, Sentiment, and Materials) will be automatically populated based on your summary. Would you like me to suggest a specific follow-up action, such as scheduling a meeting?
+      </div>
     );
   }
 

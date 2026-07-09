@@ -10,14 +10,6 @@ const aiSuggestions = [
   "Add HCP to advisory board invite list"
 ];
 
-const assistantTools = [
-  "log_interaction",
-  "edit_interaction",
-  "verify_compliance_guidelines",
-  "log_resource_request",
-  "extract_competitive_intelligence"
-];
-
 const requiredInputFields = ["transcript", "hcpName", "product", "topics", "outcomes", "followUps"];
 
 export function InteractionForm() {
@@ -81,10 +73,8 @@ export function InteractionForm() {
   return (
     <form className="log-screen" onSubmit={handleAnalyze}>
       <section className="form-pane" aria-label="Interaction details">
-        <h1>Log HCP Interaction</h1>
-
         <div className="details-card">
-          <h2>Interaction Details</h2>
+          <h1>Log HCP Interaction</h1>
 
           <div className="field-grid two-columns">
             <label>
@@ -129,7 +119,7 @@ export function InteractionForm() {
               className="topics-input"
               value={fieldValue("topics")}
               onChange={update("topics")}
-              placeholder="Enter key discussion points..."
+              placeholder="Product X efficiency..."
             />
           </label>
 
@@ -142,7 +132,7 @@ export function InteractionForm() {
             <div className="resource-row">
               <div>
                 <strong>Materials Shared</strong>
-                <span>No materials added.</span>
+                <span>{fieldValue("product") ? `${fieldValue("product")} brochure.` : "Brochures."}</span>
               </div>
               <button type="button">Search/Add</button>
             </div>
@@ -159,15 +149,18 @@ export function InteractionForm() {
             <legend>Observed/Inferred HCP Sentiment</legend>
             <label>
               <input type="radio" name="sentiment" value="positive" checked={fieldValue("sentiment", "neutral") === "positive"} onChange={update("sentiment")} />
+              <span className="sentiment-face" aria-hidden="true">:)</span>
               Positive
             </label>
             <label>
               <input type="radio" name="sentiment" value="neutral" checked={fieldValue("sentiment", "neutral") === "neutral"} onChange={update("sentiment")} />
+              <span className="sentiment-face" aria-hidden="true">:|</span>
               Neutral
             </label>
             <label>
               <input type="radio" name="sentiment" value="concerned" checked={fieldValue("sentiment", "neutral") === "concerned"} onChange={update("sentiment")} />
-              Concerned
+              <span className="sentiment-face" aria-hidden="true">:(</span>
+              Negative
             </label>
           </fieldset>
 
@@ -192,23 +185,21 @@ export function InteractionForm() {
 
       <aside className="assistant-pane" aria-label="AI assistant">
         <div className="assistant-header">
-          <span className="assistant-icon">AI</span>
+          <span className="assistant-icon" aria-hidden="true">AI</span>
           <div>
             <h2>AI Assistant</h2>
-            <p>Type details here to auto-fill the form</p>
+            <p>Log interaction details here via chat</p>
           </div>
         </div>
 
         <div className="assistant-body">
-          <div className="prompt-card">
-            Example: Met Dr. Sharma, discussed CardioMax pricing, positive sentiment, requested study material, follow up next week.
+          <div className="chat-bubble hint-bubble">
+            Log interaction details here (e.g., "Met Dr. Smith, discussed Prodo-X efficacy, positive sentiment, shared brochure") or ask for help.
           </div>
 
-          <div className="tool-list" aria-label="Assistant capabilities">
-            <strong>Assistant works</strong>
-            {assistantTools.map((tool) => (
-              <span key={tool}>{tool}</span>
-            ))}
+          <div className="chat-bubble user-bubble">
+            {fieldValue("transcript") ||
+              "Today I met with Dr. Smith and discussed product X efficiency. The sentiment was positive, and I shared the brochures."}
           </div>
 
           <InteractionSummary draft={draft} />
@@ -220,10 +211,11 @@ export function InteractionForm() {
           <input
             value={form.transcript}
             onChange={update("transcript")}
-            placeholder="Write interaction details..."
+            placeholder="Describe Interaction..."
             aria-label="Describe interaction"
           />
           <button className="log-button" type="submit" disabled={loading || !hasEnoughInput}>
+            <span>A</span>
             {loading ? "..." : "Log"}
           </button>
           {draft && (
