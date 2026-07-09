@@ -86,6 +86,7 @@ export function InteractionForm() {
     dispatch(setLoading(true));
 
     try {
+      // The API may parse update instructions from the assistant input before returning the draft.
       const result = await updateInteractionDraft(draft, form);
       dispatch(setDraft(result));
       setLastSubmittedMessage(submittedMessageText());
@@ -274,7 +275,4 @@ export function InteractionForm() {
     </form>
   );
 }
-
-
-
 

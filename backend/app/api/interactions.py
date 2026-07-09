@@ -29,6 +29,7 @@ def _extract_labeled_value(transcript: str, label: str) -> str:
 
 
 def _extract_transcript_updates(transcript: str) -> dict:
+    # Update instructions in the assistant box should override stale form fields.
     if not transcript.strip():
         return {}
 
@@ -112,6 +113,7 @@ def analyze_interaction(payload: InteractionAnalyzeRequest, db: Session = Depend
 @router.post("/edit", response_model=InteractionDraft)
 def edit_interaction_draft(payload: InteractionUpdateRequest, db: Session = Depends(get_db)) -> InteractionDraft:
     updates = _form_updates_to_draft_fields(payload.updates)
+    # Transcript-derived updates are applied last because they represent the newest user instruction.
     updates.update(_extract_transcript_updates(payload.updates.transcript))
     updated = edit_interaction(payload.existing.model_dump(), updates)
     draft = InteractionDraft(**updated)

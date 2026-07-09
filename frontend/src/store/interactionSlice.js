@@ -38,7 +38,7 @@ const interactionSlice = createSlice({
       const draft = action.payload;
       state.draft = draft;
 
-      // When the AI assistant extracts useful details, copy them into the editable form.
+      // Hydrate the left form from the analyzed/updated draft returned by the API.
       if (shouldUseExtractedValue(draft.hcp_name, "Unknown HCP")) {
         state.form.hcpName = draft.hcp_name;
       }
@@ -87,5 +87,4 @@ const interactionSlice = createSlice({
 
 export const { updateField, setDraft, setLoading, setError } = interactionSlice.actions;
 export default interactionSlice.reducer;
-
 

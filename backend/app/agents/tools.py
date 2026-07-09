@@ -15,6 +15,7 @@ STOP_WORDS = {
 
 # Sales tool 1: Log Interaction. The LLM path extracts core fields and summarizes the note.
 def log_interaction(transcript: str, llm_client: InteractionExtractor | None = None) -> dict:
+    # Local fallback keeps extraction usable without an LLM/API key.
     defaults = {
         "hcp_name": _find_hcp_name(transcript),
         "product": _find_product(transcript),
@@ -89,6 +90,7 @@ def _find_interaction_type(transcript: str) -> str:
 
 
 def _find_date(transcript: str) -> str:
+    # Accept dates even when pasted text inserts spaces or line breaks around dashes.
     match = re.search(r"\b(\d{1,2})\s*[-/]\s*(\d{1,2})\s*[-/]\s*(\d{4})\b", transcript)
     if not match:
         return ""
@@ -120,6 +122,7 @@ def _find_attendees(transcript: str) -> str:
 
 
 def _find_topics(transcript: str) -> str:
+    # Topics are treated as the first sentence after "discussed".
     match = re.search(r"\bdiscussed\s+(.+?)(?:\.|$)", transcript, re.IGNORECASE | re.DOTALL)
     if not match:
         return ""
@@ -144,6 +147,7 @@ def _find_samples(transcript: str) -> str:
 
 
 def _find_outcomes(transcript: str) -> str:
+    # Outcome-like sentences feed the editable Outcomes field.
     sentences = [re.sub(r"\s+", " ", item).strip() for item in re.split(r"(?<=[.!?])\s+", transcript) if item.strip()]
     outcome_sentences = [
         sentence.strip(" .")
@@ -206,5 +210,4 @@ def _format_hcp_name(name: str) -> str:
         cleaned = re.sub(r"^Dr\.?\s*", "Dr. ", cleaned, flags=re.IGNORECASE)
         return cleaned
     return f"Dr. {cleaned}"
-
 

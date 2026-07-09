@@ -10,10 +10,11 @@ The implementation uses a React/Vite frontend with Redux, a FastAPI backend, a L
 - Run a LangGraph agent workflow for interaction analysis.
 - Use Groq `gemma2-9b-it` for LLM-backed summarization and entity extraction when `GROQ_API_KEY` is configured.
 - Generate a draft interaction summary for rep review.
+- Populate editable form fields for HCP, product, interaction type, date, time, attendees, topics, outcomes, materials, samples, and follow-ups.
 - Detect resource follow-up requests.
 - Flag basic compliance risk signals.
 - Extract simple competitive intelligence.
-- Edit an existing generated draft without losing unchanged fields.
+- Edit an existing generated draft from either form fields or assistant update instructions without losing unchanged fields.
 - Persist analyzed and edited interaction drafts to SQL storage.
 - Run a local PostgreSQL database through Docker Compose.
 
@@ -21,7 +22,7 @@ The implementation uses a React/Vite frontend with Redux, a FastAPI backend, a L
 
 The HCP agent in `backend/app/agents/hcp_agent.py` manages the interaction workflow as a LangGraph state graph. The graph keeps the sales workflow explicit and auditable:
 
-1. `log_interaction` extracts HCP, product, sentiment, action items, and summary. With a Groq API key, this tool calls `gemma2-9b-it`; without a key, local deterministic extraction keeps tests and demos runnable.
+1. `log_interaction` extracts HCP, product, sentiment, interaction type, date, time, attendees, topics, outcomes, materials, samples, action items, and summary. With a Groq API key, this tool calls `gemma2-9b-it`; without a key, local deterministic extraction keeps tests and demos runnable.
 2. `verify_compliance` checks the transcript for high-risk claims such as off-label or guaranteed outcome language.
 3. `log_resource_request` identifies requests for samples, studies, brochures, and materials.
 4. `extract_competitive_intelligence` captures competitor or alternative therapy mentions.
@@ -123,6 +124,32 @@ The FastAPI app exposes these local endpoints:
 
 Interactive API docs are available at `http://localhost:8000/docs` while the backend is running.
 
+## Manual Test Prompts
+
+Initial log with full extraction:
+
+```text
+I had a phone call with Dr. Ananya Rao from Apollo Hospitals, Bengaluru on 22-05-2025 at 11:15. We discussed GlucoCare safety, patient adherence, and competitor MedicoPlus. She was negative about pricing but requested study material and samples. Follow up next week with brochure and clinical data.
+```
+
+Update an existing draft:
+
+```text
+Update Dr. Ananya Rao to Email on 24-05-2025 at 16:30. Discussed GlucoCare efficacy and affordability. Sentiment positive. Outcomes: review clinical data. Follow-up: send brochure and schedule call. Samples requested.
+```
+
+Compliance check:
+
+```text
+Met Dr. Ananya Rao on 24-05-2025 at 16:30. Discussed GlucoCare and said it has no side effects and is 100% safe. Follow up next week.
+```
+
+Resource request and competitive intelligence:
+
+```text
+Met Dr. Ananya Rao on 24-05-2025 at 16:30. Discussed GlucoCare safety. She requested samples, study material, and a brochure. She compared it with competitor MedicoPlus.
+```
+
 ## Run Tests
 
 Backend tests:
@@ -152,3 +179,4 @@ npm run build
 - Add authentication and role-based access for reps, managers, and compliance reviewers.
 - Add approval states for draft, submitted, manager-reviewed, and compliance-reviewed interactions.
 - Expand compliance checks with product-specific rule sources.
+
