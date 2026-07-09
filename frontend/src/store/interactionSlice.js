@@ -8,9 +8,9 @@ const initialState = {
     transcript: "",
     hcpName: "",
     product: "",
-    interactionType: "Meeting",
-    date: "19-04-2025",
-    time: "19:36",
+    interactionType: "",
+    date: "",
+    time: "",
     attendees: "",
     topics: "",
     sentiment: "neutral",
@@ -48,6 +48,12 @@ const interactionSlice = createSlice({
       }
       if (draft.interaction_type || draft.interactionType) {
         state.form.interactionType = draft.interaction_type || draft.interactionType;
+      }
+      if (draft.date) {
+        state.form.date = draft.date;
+      }
+      if (draft.time) {
+        state.form.time = draft.time;
       }
       if (draft.action_items?.length) {
         state.form.followUps = draft.action_items.join("\n");

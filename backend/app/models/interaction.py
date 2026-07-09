@@ -16,6 +16,8 @@ class Interaction(Base):
     product: Mapped[str] = mapped_column(String(120), index=True)
     sentiment: Mapped[str] = mapped_column(String(40), default="neutral")
     interaction_type: Mapped[str] = mapped_column(String(40), default="Meeting")
+    interaction_date: Mapped[str] = mapped_column(String(20), default="")
+    interaction_time: Mapped[str] = mapped_column(String(20), default="")
     transcript: Mapped[str] = mapped_column(Text)
     action_items: Mapped[str] = mapped_column(Text, default="[]")
     compliance_status: Mapped[str] = mapped_column(String(40), default="clear")

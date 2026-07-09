@@ -24,3 +24,13 @@ def test_hcp_agent_uses_compiled_langgraph():
     graph = _compiled_graph()
 
     assert hasattr(graph, "invoke")
+
+def test_analyze_transcript_extracts_interaction_type_date_and_time():
+    draft = analyze_transcript(
+        "I had a phone call with Dr. Ananya Rao from Apollo Hospitals, Bengaluru on 22-05-2025 at 11:15. "
+        "We discussed GlucoCare safety and patient adherence."
+    )
+
+    assert draft.interaction_type == "Call"
+    assert draft.date == "22-05-2025"
+    assert draft.time == "11:15"

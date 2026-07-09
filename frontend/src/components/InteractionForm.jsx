@@ -124,7 +124,8 @@ export function InteractionForm() {
 
             <label>
               Interaction Type
-              <select value={fieldValue("interactionType", "Meeting")} onChange={update("interactionType")}>
+              <select value={fieldValue("interactionType")} onChange={update("interactionType")}>
+                <option value="">Select type</option>
                 <option>Meeting</option>
                 <option>Call</option>
                 <option>Email</option>
@@ -134,12 +135,12 @@ export function InteractionForm() {
 
             <label>
               Date
-              <input type="text" value={fieldValue("date", "19-04-2025")} onChange={update("date")} />
+              <input type="text" value={fieldValue("date")} onChange={update("date")} placeholder="DD-MM-YYYY" />
             </label>
 
             <label>
               Time
-              <input type="text" value={fieldValue("time", "19:36")} onChange={update("time")} />
+              <input type="text" value={fieldValue("time")} onChange={update("time")} placeholder="HH:mm" />
             </label>
           </div>
 
@@ -270,3 +271,4 @@ export function InteractionForm() {
     </form>
   );
 }
+

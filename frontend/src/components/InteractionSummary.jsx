@@ -2,11 +2,7 @@ import React from "react";
 
 export function InteractionSummary({ draft }) {
   if (!draft) {
-    return (
-      <div className="chat-bubble success-bubble">
-        <strong>Interaction logged successfully!</strong> The details (HCP Name, Date, Sentiment, and Materials) will be automatically populated based on your summary. Would you like me to suggest a specific follow-up action, such as scheduling a meeting?
-      </div>
-    );
+    return null;
   }
 
   const actionItems = draft.action_items?.length ? draft.action_items : ["Review and confirm interaction log"];

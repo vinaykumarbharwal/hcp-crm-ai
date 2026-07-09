@@ -14,6 +14,8 @@ def save_interaction_draft(db: Session, draft: InteractionDraft, transcript: str
         product=draft.product,
         sentiment=draft.sentiment,
         interaction_type=draft.interaction_type,
+        interaction_date=draft.date,
+        interaction_time=draft.time,
         transcript=transcript,
         action_items=json.dumps(draft.action_items),
         compliance_status=draft.compliance_status,
@@ -38,6 +40,8 @@ def persist_interaction_update(db: Session, draft: InteractionDraft, transcript:
     row.product = draft.product
     row.sentiment = draft.sentiment
     row.interaction_type = draft.interaction_type
+    row.interaction_date = draft.date
+    row.interaction_time = draft.time
     row.transcript = transcript or row.transcript
     row.action_items = json.dumps(draft.action_items)
     row.compliance_status = draft.compliance_status

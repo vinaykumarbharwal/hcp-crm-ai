@@ -111,3 +111,18 @@ def test_analyze_interaction_preserves_extracted_sentiment_without_form_override
     assert body["sentiment"] == "positive"
     assert "Schedule follow-up" in body["action_items"]
     assert body["draft_summary"] == "Dr. Sharma discussed CardioMax with positive sentiment. Compliance status: clear."
+
+
+def test_analyze_interaction_returns_extracted_interaction_type_date_and_time():
+    response = client.post(
+        "/api/interactions/analyze",
+        json={
+            "transcript": "I had a phone call with Dr. Ananya Rao from Apollo Hospitals, Bengaluru on 22-05-2025 at 11:15. We discussed GlucoCare safety."
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["interactionType"] == "Call"
+    assert body["date"] == "22-05-2025"
+    assert body["time"] == "11:15"

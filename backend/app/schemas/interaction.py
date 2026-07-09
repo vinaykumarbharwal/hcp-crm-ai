@@ -39,6 +39,8 @@ class InteractionAnalyzeRequest(BaseModel):
             self.transcript,
             f"Met {self.hcp_name}" if self.hcp_name else "",
             f"Interaction type: {self.interaction_type}" if self.interaction_type else "",
+            f"Date: {self.date}" if self.date else "",
+            f"Time: {self.time}" if self.time else "",
             f"Product discussed: {self.product}" if self.product else "",
             f"Attendees: {self.attendees}" if self.attendees else "",
             f"Topics discussed: {self.topics}" if self.topics else "",
@@ -57,6 +59,8 @@ class InteractionDraft(BaseModel):
     product: str
     sentiment: str
     interaction_type: str = Field(default="Meeting", alias="interactionType")
+    date: str = ""
+    time: str = ""
     action_items: list[str]
     compliance_status: str
     resource_request: str | None = None

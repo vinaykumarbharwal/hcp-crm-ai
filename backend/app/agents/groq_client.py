@@ -34,6 +34,8 @@ class HcpGroqLLM:
             "product": _clean_string(payload.get("product")) or defaults["product"],
             "sentiment": _normalize_sentiment(payload.get("sentiment")) or defaults["sentiment"],
             "interaction_type": _normalize_interaction_type(payload.get("interaction_type")) or defaults["interaction_type"],
+            "date": _clean_string(payload.get("date")) or defaults["date"],
+            "time": _clean_string(payload.get("time")) or defaults["time"],
             "action_items": _clean_action_items(payload.get("action_items")) or defaults["action_items"],
             "draft_summary": _clean_string(payload.get("draft_summary")) or None,
         }
@@ -49,9 +51,11 @@ def _build_extraction_prompt(transcript: str, defaults: dict[str, Any]) -> str:
     return f"""
 You are the AI agent inside an HCP CRM used by pharmaceutical field representatives.
 Extract a concise interaction draft from the note below.
-Return only valid JSON with these keys: hcp_name, product, sentiment, interaction_type, action_items, draft_summary.
+Return only valid JSON with these keys: hcp_name, product, sentiment, interaction_type, date, time, action_items, draft_summary.
 Sentiment must be one of: positive, neutral, concerned.
 Interaction type must be one of: Meeting, Call, Email, Conference.
+Date must use DD-MM-YYYY format when present.
+Time must use 24-hour HH:mm format when present.
 Action items must be an array of short sales follow-up tasks.
 Use the fallback JSON if the note does not include a value.
 

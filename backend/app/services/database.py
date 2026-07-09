@@ -13,20 +13,25 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
-    _ensure_interaction_type_column()
+    _ensure_interactions_columns()
 
 
-def _ensure_interaction_type_column() -> None:
+def _ensure_interactions_columns() -> None:
     inspector = inspect(engine)
     if "interactions" not in inspector.get_table_names():
         return
 
     columns = {column["name"] for column in inspector.get_columns("interactions")}
-    if "interaction_type" in columns:
-        return
+    additions = {
+        "interaction_type": "ALTER TABLE interactions ADD COLUMN interaction_type VARCHAR(40) DEFAULT 'Meeting'",
+        "interaction_date": "ALTER TABLE interactions ADD COLUMN interaction_date VARCHAR(20) DEFAULT ''",
+        "interaction_time": "ALTER TABLE interactions ADD COLUMN interaction_time VARCHAR(20) DEFAULT ''",
+    }
 
     with engine.begin() as connection:
-        connection.execute(text("ALTER TABLE interactions ADD COLUMN interaction_type VARCHAR(40) DEFAULT 'Meeting'"))
+        for column, statement in additions.items():
+            if column not in columns:
+                connection.execute(text(statement))
 
 
 def get_db():
