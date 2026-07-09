@@ -218,3 +218,76 @@ def test_analyze_interaction_returns_form_detail_fields_from_multiline_note():
     assert body["materials"] == "Brochure, Clinical data, Study material"
     assert "requested study material and samples" in body["outcomes"]
 
+
+
+def test_edit_interaction_persists_detail_form_fields():
+    response = client.post(
+        "/api/interactions/edit",
+        json={
+            "existing": {
+                "hcp_name": "Dr. Sharma",
+                "product": "CardioMax",
+                "sentiment": "neutral",
+                "interactionType": "Meeting",
+                "date": "",
+                "time": "",
+                "attendees": "",
+                "topics": "",
+                "outcomes": "",
+                "materials": "",
+                "samples": "",
+                "action_items": ["Review and confirm interaction log"],
+                "compliance_status": "clear",
+                "resource_request": None,
+                "competitive_intelligence": None,
+                "draft_summary": "Dr. Sharma discussed CardioMax with neutral sentiment. Compliance status: clear.",
+            },
+            "updates": {
+                "hcpName": "Dr. Sharma",
+                "product": "CardioMax",
+                "attendees": "Dr. Sharma, Rep Vinay",
+                "topics": "CardioMax safety",
+                "materials": "Brochure",
+                "samples": "Samples requested",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["attendees"] == "Dr. Sharma, Rep Vinay"
+    assert body["topics"] == "CardioMax safety"
+    assert body["materials"] == "Brochure"
+    assert body["samples"] == "Samples requested"
+
+
+def test_edit_interaction_extracts_lowercase_hcp_from_chat_instruction():
+    response = client.post(
+        "/api/interactions/edit",
+        json={
+            "existing": {
+                "hcp_name": "Dr. Sharma",
+                "product": "CardioMax",
+                "sentiment": "neutral",
+                "interactionType": "Meeting",
+                "action_items": ["Review and confirm interaction log"],
+                "compliance_status": "clear",
+                "resource_request": None,
+                "competitive_intelligence": None,
+                "draft_summary": "Dr. Sharma discussed CardioMax with neutral sentiment. Compliance status: clear.",
+            },
+            "updates": {
+                "transcript": "update dr. vinay to Call on 24-05-2025 at 16:30. product is CardioMax. samples: starter pack",
+                "hcpName": "Dr. Sharma",
+                "product": "CardioMax",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["hcp_name"] == "Dr. Vinay"
+    assert body["interactionType"] == "Call"
+    assert body["date"] == "24-05-2025"
+    assert body["time"] == "16:30"
+    assert body["samples"] == "starter pack"

@@ -12,6 +12,14 @@ STOP_WORDS = {
     "study", "material", "brochure", "positive", "neutral", "concerned", "worried", "interested"
 }
 
+NAME_STOP_WORDS = (
+    "from|at|on|in|with|about|for|to|interaction|discussed|discuss|called|"
+    "phone|email|meeting|call|visited|spoke|update|change|product|sentiment|date|time"
+)
+NAME_TOKEN = rf"(?!(?:{NAME_STOP_WORDS})\b)[A-Za-z][A-Za-z'-]*"
+NAME_PATTERN = rf"{NAME_TOKEN}(?:\s+{NAME_TOKEN}){{0,3}}"
+NAME_TERMINATOR = rf"(?=$|\s*(?:[,.;:]|\b(?:{NAME_STOP_WORDS})\b))"
+
 
 # Sales tool 1: Log Interaction. The LLM path extracts core fields and summarizes the note.
 def log_interaction(transcript: str, llm_client: InteractionExtractor | None = None) -> dict:
@@ -159,12 +167,12 @@ def _find_outcomes(transcript: str) -> str:
 
 def _find_hcp_name(transcript: str) -> str:
     patterns = [
-        r"\bDr\.?\s+[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?",
-        r"(?i:\b(?:met|visited|called|spoke with|meeting with))\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)",
-        r"(?i:\bHCP\s*(?:name)?\s*[:\-]\s*)([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)",
+        rf"\bdr\.?\s+({NAME_PATTERN}){NAME_TERMINATOR}",
+        rf"\b(?:met|visited|called|spoke with|meeting with)\s+(?:dr\.?\s+)?({NAME_PATTERN}){NAME_TERMINATOR}",
+        rf"\bhcp\s*(?:name)?\s*[:\-]\s*(?:dr\.?\s+)?({NAME_PATTERN}){NAME_TERMINATOR}",
     ]
     for pattern in patterns:
-        match = re.search(pattern, transcript)
+        match = re.search(pattern, transcript, re.IGNORECASE)
         if match:
             name = match.group(1) if match.lastindex else match.group(0)
             return _format_hcp_name(name)
@@ -208,6 +216,19 @@ def _format_hcp_name(name: str) -> str:
     cleaned = name.strip(" .,:;\"'")
     if cleaned.lower().startswith("dr"):
         cleaned = re.sub(r"^Dr\.?\s*", "Dr. ", cleaned, flags=re.IGNORECASE)
-        return cleaned
-    return f"Dr. {cleaned}"
+        return _titlecase_hcp_name(cleaned)
+    return f"Dr. {_titlecase_hcp_name(cleaned)}"
+
+
+def _titlecase_hcp_name(name: str) -> str:
+    parts = name.split()
+    if parts and parts[0].lower().rstrip(".") == "dr":
+        return " ".join(["Dr.", *[_titlecase_name_part(part) for part in parts[1:]]])
+    return " ".join(_titlecase_name_part(part) for part in parts)
+
+
+def _titlecase_name_part(part: str) -> str:
+    if part.islower() or part.isupper():
+        return part[:1].upper() + part[1:].lower()
+    return part
 

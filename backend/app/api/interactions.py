@@ -23,9 +23,12 @@ def _split_action_items(value: str) -> list[str]:
     return [item.strip() for item in value.splitlines() if item.strip()]
 
 
+LABEL_BOUNDARY = r"(?=\s*(?:\b(?:hcp(?:\s+name)?|product|interaction(?:\s+type)?|date|time|attendees?|topics?|outcomes?|materials?|samples?|follow-?ups?)\s*:|$))"
+
+
 def _extract_labeled_value(transcript: str, label: str) -> str:
-    match = re.search(rf"\b{label}\s*:\s*([^\.\n]+)", transcript, re.IGNORECASE)
-    return match.group(1).strip() if match else ""
+    match = re.search(rf"\b{label}\s*:\s*(.+?){LABEL_BOUNDARY}", transcript, re.IGNORECASE | re.DOTALL)
+    return re.sub(r"\s+", " ", match.group(1)).strip(" .") if match else ""
 
 
 def _extract_transcript_updates(transcript: str) -> dict:
@@ -50,6 +53,22 @@ def _extract_transcript_updates(transcript: str) -> dict:
     if extracted.time:
         updates["time"] = extracted.time
 
+    attendees = _extract_labeled_value(transcript, "attendees?") or extracted.attendees
+    if attendees:
+        updates["attendees"] = attendees
+
+    topics = _extract_labeled_value(transcript, "topics?") or extracted.topics
+    if topics:
+        updates["topics"] = topics
+
+    materials = _extract_labeled_value(transcript, "materials?") or extracted.materials
+    if materials:
+        updates["materials"] = materials
+
+    samples = _extract_labeled_value(transcript, "samples?") or extracted.samples
+    if samples:
+        updates["samples"] = samples
+
     outcomes = _extract_labeled_value(transcript, "outcomes?")
     if outcomes:
         updates["draft_summary"] = outcomes
@@ -70,6 +89,11 @@ def _form_updates_to_draft_fields(payload: InteractionAnalyzeRequest) -> dict:
         "interaction_type": payload.interaction_type,
         "date": payload.date,
         "time": payload.time,
+        "attendees": payload.attendees,
+        "topics": payload.topics,
+        "outcomes": payload.outcomes,
+        "materials": payload.materials,
+        "samples": payload.samples,
     }
     if payload.has_explicit_sentiment():
         updates["sentiment"] = payload.sentiment
@@ -101,6 +125,16 @@ def analyze_interaction(payload: InteractionAnalyzeRequest, db: Session = Depend
         draft.time = payload.time
     if payload.has_explicit_sentiment():
         draft.sentiment = payload.sentiment
+    if payload.attendees:
+        draft.attendees = payload.attendees
+    if payload.topics:
+        draft.topics = payload.topics
+    if payload.outcomes:
+        draft.outcomes = payload.outcomes
+    if payload.materials:
+        draft.materials = payload.materials
+    if payload.samples:
+        draft.samples = payload.samples
     if payload.follow_ups:
         for item in _split_action_items(payload.follow_ups):
             if item not in draft.action_items:

@@ -75,7 +75,8 @@ export function InteractionForm() {
     }
   }
 
-  async function handleUpdate() {
+  async function handleUpdate(event) {
+    event?.preventDefault();
     dispatch(setError(""));
 
     if (!draft) {
@@ -110,7 +111,7 @@ export function InteractionForm() {
   }
 
   return (
-    <form className="log-screen" onSubmit={handleAnalyze}>
+    <form className="log-screen" onSubmit={draft ? handleUpdate : handleAnalyze}>
       <section className="form-pane" aria-label="Interaction details">
         <div className="details-card">
           <h1>Log HCP Interaction</h1>
@@ -263,13 +264,8 @@ export function InteractionForm() {
           />
           <button className="log-button" type="submit" disabled={loading || !hasEnoughInput}>
             <span>A</span>
-            {loading ? "..." : "Log"}
+            {loading ? "..." : draft ? "Update" : "Log"}
           </button>
-          {draft && (
-            <button className="update-button" type="button" disabled={loading} onClick={handleUpdate}>
-              Update
-            </button>
-          )}
         </div>
       </aside>
     </form>

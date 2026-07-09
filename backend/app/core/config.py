@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     support_model: str = "llama-3.3-70b-versatile"
     allowed_origins: list[str] = ["http://localhost:5173"]
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8-sig", extra="ignore")
 
 
 settings = Settings()

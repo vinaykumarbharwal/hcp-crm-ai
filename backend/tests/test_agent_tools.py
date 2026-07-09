@@ -58,3 +58,11 @@ def test_analyze_transcript_extracts_form_details_from_multiline_note():
     assert "requested study material and samples" in draft.outcomes
     assert "Follow up next week with brochure and clinical data" in draft.outcomes
 
+
+
+def test_analyze_transcript_extracts_lowercase_dr_name():
+    draft = analyze_transcript("met dr. vinay discussed CardioMax safety and requested samples")
+
+    assert draft.hcp_name == "Dr. Vinay"
+    assert draft.attendees == "Dr. Vinay"
+    assert draft.product == "CardioMax"

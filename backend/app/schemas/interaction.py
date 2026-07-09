@@ -14,6 +14,8 @@ class InteractionAnalyzeRequest(BaseModel):
     topics: str = ""
     sentiment: str = "neutral"
     outcomes: str = ""
+    materials: str = ""
+    samples: str = ""
     follow_ups: str = Field(default="", alias="followUps")
 
     def has_interaction_content(self) -> bool:
@@ -25,6 +27,8 @@ class InteractionAnalyzeRequest(BaseModel):
             self.attendees,
             self.topics,
             self.outcomes,
+            self.materials,
+            self.samples,
             self.follow_ups,
         ]
         return any(field.strip() for field in fields)
@@ -46,6 +50,8 @@ class InteractionAnalyzeRequest(BaseModel):
             f"Topics discussed: {self.topics}" if self.topics else "",
             f"Observed sentiment: {self.sentiment}" if self.has_interaction_content() and self.has_explicit_sentiment() else "",
             f"Outcomes: {self.outcomes}" if self.outcomes else "",
+            f"Materials: {self.materials}" if self.materials else "",
+            f"Samples: {self.samples}" if self.samples else "",
             f"Follow-up actions: {self.follow_ups}" if self.follow_ups else "",
         ]
         return ". ".join(part.strip(" .") for part in parts if part and part.strip())
