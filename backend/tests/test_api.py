@@ -97,6 +97,7 @@ def test_edit_interaction_updates_existing_draft_without_erasing_blank_fields():
     assert body["draft_summary"] == "Dr. Sharma discussed CardioMax with positive sentiment. Compliance status: clear."
     assert isinstance(body["id"], int)
 
+
 def test_analyze_interaction_preserves_extracted_sentiment_without_form_override():
     response = client.post(
         "/api/interactions/analyze",
