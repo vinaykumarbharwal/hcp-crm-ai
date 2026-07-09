@@ -1,4 +1,4 @@
-﻿# Environment
+# Environment
 .env
 .env.*
 !.env.example
@@ -29,6 +29,7 @@ pnpm-debug.log*
 postgres_data/
 *.sqlite
 *.sqlite3
+*.db
 
 # IDE / OS
 .idea/

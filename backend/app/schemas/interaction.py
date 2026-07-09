@@ -46,6 +46,7 @@ class InteractionAnalyzeRequest(BaseModel):
 
 
 class InteractionDraft(BaseModel):
+    id: int | None = None
     hcp_name: str
     product: str
     sentiment: str

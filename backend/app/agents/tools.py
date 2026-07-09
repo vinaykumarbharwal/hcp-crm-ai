@@ -1,4 +1,11 @@
-﻿import re
+import re
+from typing import Any, Protocol
+
+
+class InteractionExtractor(Protocol):
+    def extract_interaction(self, transcript: str, defaults: dict[str, Any]) -> dict[str, Any]:
+        ...
+
 
 STOP_WORDS = {
     "he", "she", "they", "it", "we", "i", "the", "a", "an", "new", "pricing", "sample",
@@ -6,38 +13,50 @@ STOP_WORDS = {
 }
 
 
-# These functions are intentionally small placeholders for the five planned CRM tools.
-# In production, each function can call Groq/LangGraph while keeping the same contract.
-def log_interaction(transcript: str) -> dict:
-    return {
+# Sales tool 1: Log Interaction. The LLM path extracts core fields and summarizes the note.
+def log_interaction(transcript: str, llm_client: InteractionExtractor | None = None) -> dict:
+    defaults = {
         "hcp_name": _find_hcp_name(transcript),
         "product": _find_product(transcript),
         "sentiment": _find_sentiment(transcript),
         "action_items": _find_action_items(transcript),
+        "draft_summary": None,
+    }
+
+    if not llm_client:
+        return defaults
+
+    extracted = llm_client.extract_interaction(transcript, defaults)
+    return {
+        "hcp_name": extracted.get("hcp_name") or defaults["hcp_name"],
+        "product": extracted.get("product") or defaults["product"],
+        "sentiment": extracted.get("sentiment") or defaults["sentiment"],
+        "action_items": extracted.get("action_items") or defaults["action_items"],
+        "draft_summary": extracted.get("draft_summary") or defaults["draft_summary"],
     }
 
 
+# Sales tool 2: Edit Interaction. Partial updates preserve verified values.
 def edit_interaction(existing: dict, updates: dict) -> dict:
-    # Ignore empty updates so partial edits do not erase already verified values.
     updated = existing.copy()
     updated.update({key: value for key, value in updates.items() if value not in (None, "")})
     return updated
 
 
+# Sales tool 3: Verify Compliance Guidelines.
 def verify_compliance_guidelines(transcript: str) -> str:
-    # Simple keyword screening keeps the demo functional until a regulated rule set is added.
     risky_terms = ["guaranteed cure", "off-label", "no side effects", "100% safe"]
     return "review_required" if any(term in transcript.lower() for term in risky_terms) else "clear"
 
 
+# Sales tool 4: Log Resource Request.
 def log_resource_request(transcript: str) -> str | None:
-    # Resource intent covers samples, clinical material, and study follow-ups.
     keywords = ["sample", "samples", "study", "studies", "brochure", "material"]
     return "resource_follow_up_needed" if any(word in transcript.lower() for word in keywords) else None
 
 
+# Sales tool 5: Extract Competitive Intelligence.
 def extract_competitive_intelligence(transcript: str) -> str | None:
-    # Broad competitor cues are enough for routing the draft to brand intelligence review.
     match = re.search(r"competitor|competing|alternative|versus|vs\.?\s+([\w-]+)", transcript, re.IGNORECASE)
     return "competitor_or_alternative_mentioned" if match else None
 

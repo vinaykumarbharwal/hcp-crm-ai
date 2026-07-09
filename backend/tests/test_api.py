@@ -33,6 +33,7 @@ def test_analyze_interaction_accepts_transcript():
     assert body["hcp_name"] == "Dr. Sharma"
     assert body["product"] == "CardioMax"
     assert body["resource_request"] == "resource_follow_up_needed"
+    assert isinstance(body["id"], int)
 
 
 def test_analyze_interaction_rejects_empty_payload():
@@ -61,6 +62,8 @@ def test_analyze_interaction_accepts_structured_form_fields():
     assert body["product"] == "Product X"
     assert body["sentiment"] == "positive"
     assert "Send brochure" in body["action_items"]
+    assert isinstance(body["id"], int)
+
 
 def test_edit_interaction_updates_existing_draft_without_erasing_blank_fields():
     response = client.post(
@@ -92,3 +95,4 @@ def test_edit_interaction_updates_existing_draft_without_erasing_blank_fields():
     assert body["sentiment"] == "positive"
     assert body["action_items"] == ["Send updated brochure", "Schedule follow-up"]
     assert body["draft_summary"] == "Dr. Sharma discussed CardioMax with positive sentiment. Compliance status: clear."
+    assert isinstance(body["id"], int)

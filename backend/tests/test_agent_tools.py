@@ -1,4 +1,4 @@
-﻿from app.agents.hcp_agent import analyze_transcript
+from app.agents.hcp_agent import _compiled_graph, analyze_transcript
 
 
 def test_analyze_transcript_extracts_basic_draft():
@@ -18,3 +18,9 @@ def test_analyze_transcript_handles_plain_sales_note():
     assert draft.product == "CardioMax"
     assert draft.sentiment == "concerned"
     assert "Send requested resources" in draft.action_items
+
+
+def test_hcp_agent_uses_compiled_langgraph():
+    graph = _compiled_graph()
+
+    assert hasattr(graph, "invoke")
