@@ -22,6 +22,11 @@ def log_interaction(transcript: str, llm_client: InteractionExtractor | None = N
         "interaction_type": _find_interaction_type(transcript),
         "date": _find_date(transcript),
         "time": _find_time(transcript),
+        "attendees": _find_attendees(transcript),
+        "topics": _find_topics(transcript),
+        "outcomes": _find_outcomes(transcript),
+        "materials": _find_materials(transcript),
+        "samples": _find_samples(transcript),
         "action_items": _find_action_items(transcript),
         "draft_summary": None,
     }
@@ -37,6 +42,11 @@ def log_interaction(transcript: str, llm_client: InteractionExtractor | None = N
         "interaction_type": extracted.get("interaction_type") or defaults["interaction_type"],
         "date": extracted.get("date") or defaults["date"],
         "time": extracted.get("time") or defaults["time"],
+        "attendees": extracted.get("attendees") or defaults["attendees"],
+        "topics": extracted.get("topics") or defaults["topics"],
+        "outcomes": extracted.get("outcomes") or defaults["outcomes"],
+        "materials": extracted.get("materials") or defaults["materials"],
+        "samples": extracted.get("samples") or defaults["samples"],
         "action_items": extracted.get("action_items") or defaults["action_items"],
         "draft_summary": extracted.get("draft_summary") or defaults["draft_summary"],
     }
@@ -79,7 +89,7 @@ def _find_interaction_type(transcript: str) -> str:
 
 
 def _find_date(transcript: str) -> str:
-    match = re.search(r"\b(\d{1,2})[-/](\d{1,2})[-/](\d{4})\b", transcript)
+    match = re.search(r"\b(\d{1,2})\s*[-/]\s*(\d{1,2})\s*[-/]\s*(\d{4})\b", transcript)
     if not match:
         return ""
     day, month, year = match.groups()
@@ -104,6 +114,45 @@ def _find_time(transcript: str) -> str:
     return f"{hour:02d}:{minute}"
 
 
+def _find_attendees(transcript: str) -> str:
+    hcp_name = _find_hcp_name(transcript)
+    return "" if hcp_name == "Unknown HCP" else hcp_name
+
+
+def _find_topics(transcript: str) -> str:
+    match = re.search(r"\bdiscussed\s+(.+?)(?:\.|$)", transcript, re.IGNORECASE | re.DOTALL)
+    if not match:
+        return ""
+    topics = re.sub(r"\s+", " ", match.group(1)).strip(" .")
+    return topics
+
+
+def _find_materials(transcript: str) -> str:
+    text = transcript.lower()
+    materials = []
+    if "brochure" in text:
+        materials.append("Brochure")
+    if "clinical data" in text:
+        materials.append("Clinical data")
+    if "study" in text or "studies" in text:
+        materials.append("Study material")
+    return ", ".join(dict.fromkeys(materials))
+
+
+def _find_samples(transcript: str) -> str:
+    return "Samples requested" if "sample" in transcript.lower() else ""
+
+
+def _find_outcomes(transcript: str) -> str:
+    sentences = [re.sub(r"\s+", " ", item).strip() for item in re.split(r"(?<=[.!?])\s+", transcript) if item.strip()]
+    outcome_sentences = [
+        sentence.strip(" .")
+        for sentence in sentences
+        if re.search(r"\b(requested|follow up|follow-up|agreed|outcome|consider|review)\b", sentence, re.IGNORECASE)
+    ]
+    return ". ".join(outcome_sentences)
+
+
 def _find_hcp_name(transcript: str) -> str:
     patterns = [
         r"\bDr\.?\s+[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?",
@@ -120,7 +169,7 @@ def _find_hcp_name(transcript: str) -> str:
 
 def _find_product(transcript: str) -> str:
     patterns = [
-        r"\b(?:product|drug|medicine|therapy)\s*(?:discussed)?\s*[:\-]?\s*([A-Z][a-zA-Z0-9-]+)",
+        r"\b(?:product|drug|medicine|therapy)\s*(?:discussed|is|was)?\s*[:\-]?\s*([A-Z][a-zA-Z0-9-]+)",
         r"\bdiscussed\s+([A-Z][a-zA-Z0-9-]+)",
         r"\babout\s+([A-Z][a-zA-Z0-9-]+)",
     ]
@@ -137,7 +186,7 @@ def _find_sentiment(transcript: str) -> str:
     text = transcript.lower()
     if any(word in text for word in ["interested", "positive", "agreed", "liked"]):
         return "positive"
-    if any(word in text for word in ["worried", "concern", "concerned", "pricing", "risk"]):
+    if any(word in text for word in ["worried", "concern", "concerned", "negative", "unhappy", "not interested", "hesitant", "pricing", "risk"]):
         return "concerned"
     return "neutral"
 
@@ -157,3 +206,5 @@ def _format_hcp_name(name: str) -> str:
         cleaned = re.sub(r"^Dr\.?\s*", "Dr. ", cleaned, flags=re.IGNORECASE)
         return cleaned
     return f"Dr. {cleaned}"
+
+

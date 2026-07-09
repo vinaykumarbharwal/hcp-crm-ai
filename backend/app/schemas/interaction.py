@@ -61,6 +61,11 @@ class InteractionDraft(BaseModel):
     interaction_type: str = Field(default="Meeting", alias="interactionType")
     date: str = ""
     time: str = ""
+    attendees: str = ""
+    topics: str = ""
+    outcomes: str = ""
+    materials: str = ""
+    samples: str = ""
     action_items: list[str]
     compliance_status: str
     resource_request: str | None = None

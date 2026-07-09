@@ -15,6 +15,8 @@ const initialState = {
     topics: "",
     sentiment: "neutral",
     outcomes: "",
+    materials: "",
+    samples: "",
     followUps: ""
   },
   draft: null
@@ -55,11 +57,23 @@ const interactionSlice = createSlice({
       if (draft.time) {
         state.form.time = draft.time;
       }
+      if (draft.attendees) {
+        state.form.attendees = draft.attendees;
+      }
+      if (draft.topics) {
+        state.form.topics = draft.topics;
+      }
+      if (draft.outcomes) {
+        state.form.outcomes = draft.outcomes;
+      }
+      if (draft.materials) {
+        state.form.materials = draft.materials;
+      }
+      if (draft.samples) {
+        state.form.samples = draft.samples;
+      }
       if (draft.action_items?.length) {
         state.form.followUps = draft.action_items.join("\n");
-      }
-      if (!state.form.outcomes && draft.draft_summary) {
-        state.form.outcomes = draft.draft_summary;
       }
     },
     setLoading(state, action) {
@@ -73,3 +87,5 @@ const interactionSlice = createSlice({
 
 export const { updateField, setDraft, setLoading, setError } = interactionSlice.actions;
 export default interactionSlice.reducer;
+
+

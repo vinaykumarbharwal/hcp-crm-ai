@@ -14,7 +14,7 @@ const requiredInputFields = ["transcript", "hcpName", "product", "topics", "outc
 
 const assistantHint = 'Log interaction details here (e.g., "Met Dr. Smith, discussed Prodo-X efficacy, positive sentiment, shared brochure") or ask for help.';
 
-function buildSuccessMessage(draft) {
+function buildDraftMessage(draft, action = "logged") {
   const hcpText = draft.hcp_name && draft.hcp_name !== "Unknown HCP" ? ` for ${draft.hcp_name}` : "";
   const productText = draft.product && draft.product !== "General discussion" ? ` ${draft.product}` : "";
   const sentimentText = draft.sentiment ? ` Sentiment is marked as ${draft.sentiment}.` : "";
@@ -23,7 +23,7 @@ function buildSuccessMessage(draft) {
     : " Materials will be populated if the note mentions brochures, studies, or samples.";
   const followUpText = draft.action_items?.[0] || "scheduling a meeting";
 
-  return `Interaction logged successfully${hcpText}! I populated the HCP Name, Date, Sentiment, and Materials from your${productText} summary.${sentimentText}${materialText} Would you like me to suggest a specific follow-up action, such as ${followUpText}?`;
+  return `Interaction ${action} successfully${hcpText}! I updated the HCP Name, Date, Sentiment, and Materials from your${productText} summary.${sentimentText}${materialText} Would you like me to suggest a specific follow-up action, such as ${followUpText}?`;
 }
 
 export function InteractionForm() {
@@ -66,7 +66,7 @@ export function InteractionForm() {
       const result = await analyzeInteraction(form);
       dispatch(setDraft(result));
       setLastSubmittedMessage(submittedMessage);
-      setAssistantSuccessMessage(buildSuccessMessage(result));
+      setAssistantSuccessMessage(buildDraftMessage(result, "logged"));
       dispatch(updateField({ field: "transcript", value: "" }));
     } catch (err) {
       dispatch(setError(err.message));
@@ -88,6 +88,9 @@ export function InteractionForm() {
     try {
       const result = await updateInteractionDraft(draft, form);
       dispatch(setDraft(result));
+      setLastSubmittedMessage(submittedMessageText());
+      setAssistantSuccessMessage(buildDraftMessage(result, "updated"));
+      dispatch(updateField({ field: "transcript", value: "" }));
     } catch (err) {
       dispatch(setError(err.message));
     } finally {
@@ -168,14 +171,14 @@ export function InteractionForm() {
             <div className="resource-row">
               <div>
                 <strong>Materials Shared</strong>
-                <span>{fieldValue("product") ? `${fieldValue("product")} brochure.` : "Brochures."}</span>
+                <span>{fieldValue("materials") || (fieldValue("product") ? `${fieldValue("product")} brochure.` : "Brochures.")}</span>
               </div>
               <button type="button">Search/Add</button>
             </div>
             <div className="resource-row">
               <div>
                 <strong>Samples Distributed</strong>
-                <span>No samples added.</span>
+                <span>{fieldValue("samples") || "No samples added."}</span>
               </div>
               <button type="button">Add Sample</button>
             </div>
@@ -196,7 +199,7 @@ export function InteractionForm() {
             <label>
               <input type="radio" name="sentiment" value="concerned" checked={fieldValue("sentiment", "neutral") === "concerned"} onChange={update("sentiment")} />
               <span className="sentiment-face" aria-hidden="true">:(</span>
-              Negative
+              Concerned
             </label>
           </fieldset>
 
@@ -271,4 +274,7 @@ export function InteractionForm() {
     </form>
   );
 }
+
+
+
 
